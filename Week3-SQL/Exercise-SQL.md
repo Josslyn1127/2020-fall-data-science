@@ -169,11 +169,30 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 
 1. Who went on more bike trips, Males or Females?
 	```
-	[YOUR QUERY HERE]
+	[SELECT
+      gender,
+      COUNT(gender) AS Gender_Count
+     FROM
+      `bigquery-public-data.new_york_citibike.citibike_trips`
+     GROUP BY 
+      gender 
+     ORDER BY 
+      Gender_Count DESC]                                                                          
+      Males went on more bike Trips compared to Females
 	```
 2. What was the average, shortest, and longest bike trip taken in minutes?
 	```
-	[YOUR QUERY HERE]
+	[SELECT
+      ROUND(AVG (tripduration/60),2) AS Average_Minutes,
+      ROUND(MIN(tripduration/60),2) AS Minimum_Minutes,
+      ROUND(MAX(tripduration/60),2) AS Maximum_Minutes
+
+    FROM
+      `bigquery-public-data.new_york_citibike.citibike_trips`]
+      
+      Average bike trip: 16.04 minutes
+      Shortest bike trip: 1.0 minutes 
+      Longest bike trip: 325,167.48 minutes 
 	```
 
 3. Write a query that, for every station_name, has the amount of trips that started there and the amount of trips that ended there. (Hint, use two temporary tables, one that counts the amount of starts, the other that counts the number of ends, and then join the two.) 
