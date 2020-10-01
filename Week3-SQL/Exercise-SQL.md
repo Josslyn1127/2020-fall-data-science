@@ -59,13 +59,15 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 9. Write a query that lists and counts all the complaint_description, just for the where the owning_department is 'Animal Services Office'.
 	```
 	[SELECT
+      owning_department,
       complaint_description,
-      COUNT(complaint_description) AS count,
+      COUNT(complaint_description) AS count
     FROM
       `bigquery-public-data.austin_311.311_service_requests`
     WHERE 
       owning_department = 'Animal Services Office'
     GROUP BY
+      owning_department,
       complaint_description
     ORDER BY
       count]
@@ -89,17 +91,39 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 
 1. Write a query that returns each zipcode and their population for 2000 and 2010. 
 	```
-	[# 2000
+	[WITH
+     Table_2000 AS (
      SELECT
-       zipcode, population
-     FROM
-     `bigquery-public-data.census_bureau_usa.population_by_zip_2000`]
+      zipcode,
+      population AS pop_2000
+    FROM
+     `bigquery-public-data.census_bureau_usa.population_by_zip_2000`
+    GROUP BY
+     zipcode,
+     population),
+  
+   Table_2010 AS (
+   SELECT
+    zipcode,
+    population AS pop_2010
+   FROM
+    `bigquery-public-data.census_bureau_usa.population_by_zip_2000`
+   GROUP BY
+    zipcode,
+    population)
+
+   SELECT
+    Table_2000.zipcode,
+    Table_2000.pop_2000,
+    Table_2010.pop_2010
+   FROM
+    Table_2000
+   INNER JOIN
+    Table_2010
+   ON
+   Table_2000.zipcode = Table_2010.zipcode]
      
-     [# 2010
-     SELECT
-       zipcode, population
-     FROM
-     `bigquery-public-data.census_bureau_usa.population_by_zip_2010`]
+    
 	```
 
 
@@ -108,22 +132,48 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 	```
 	[SELECT
       advertiser_name,
-      spend_usd
+      SUM (spend_usd) AS total_spend
      FROM
       `bigquery-public-data.google_political_ads.advertiser_weekly_spend`
+     GROUP BY 
+      advertiser_name
      ORDER BY
-       spend_usd DESC
+       total_spend DESC
      LIMIT
        1]
 	```
 2. Who was the 6th highest spender? (No need to insert query here, just type in the answer.)
 	```
-	[DSCC]
+	[SELECT
+     advertiser_name,
+     SUM(spend_usd) AS total_spend
+    FROM
+     `bigquery-public-data.google_political_ads.advertiser_weekly_spend`
+    GROUP BY
+      advertiser_name
+    ORDER BY
+     total_spend DESC
+    LIMIT
+     6]
+     
+     TOM STEYER 2020
 	```
 
 3. What week_start_date had the highest spend? (No need to insert query here, just type in the answer.)
 	```
-	[2020-02-23]
+	[SELECT
+     week_start_date,
+     SUM(spend_usd) AS total_spend
+    FROM
+     `bigquery-public-data.google_political_ads.advertiser_weekly_spend`
+    GROUP BY
+     week_start_date
+    ORDER BY
+     total_spend DESC
+    LIMIT
+     1]
+    
+    2020-09-20
 	```
 
 4. Using the `advertiser_weekly_spend` table, write a query that returns the sum of spend by week (using week_start_date) in usd for the month of August only. 
@@ -143,7 +193,17 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 	```
 6.  How many ads did the 'TOM STEYER 2020' campaign run? (No need to insert query here, just type in the answer.)
 	```
-	[50]
+	[SELECT
+     advertiser_name,
+     COUNT (advertiser_id) as total_ads
+    FROM
+     `bigquery-public-data.google_political_ads.advertiser_weekly_spend`
+    WHERE
+     advertiser_name = 'TOM STEYER 2020'
+    GROUP BY 
+     advertiser_name]
+
+     50
 	```
 7. Write a query that has, in the US region only, the total spend in usd for each advertiser_name and how many ads they ran. (Hint, you're going to have to join tables for this one). 
 	```
@@ -163,7 +223,17 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 	```
 10. Which advertiser_name had the lowest average spend per ad that was at least above 0. 
 	``` 
-	[YOUR QUERY HERE]
+	[SELECT
+     advertiser_name,
+     ROUND(AVG(spend_usd),2) AS avg_spend_per_ad
+    FROM
+     `bigquery-public-data.google_political_ads.advertiser_weekly_spend`
+    GROUP BY
+     advertiser_name
+    HAVING
+     avg_spend_per_ad > 0
+    ORDER BY
+     avg_spend_per_ad ASC]
 	```
 ## For this next section, use the `new_york_citibike` datasets.
 
@@ -197,7 +267,32 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 
 3. Write a query that, for every station_name, has the amount of trips that started there and the amount of trips that ended there. (Hint, use two temporary tables, one that counts the amount of starts, the other that counts the number of ends, and then join the two.) 
 	```
-	[YOUR QUERY HERE]
+	[WITH
+     START AS (
+     SELECT
+      start_station_name,
+      COUNT(start_station_id) AS start_counts
+     FROM
+     `bigquery-public-data.new_york_citibike.citibike_trips`
+    GROUP BY
+     start_station_name),
+  
+    ENDS AS (
+    SELECT
+     end_station_name, 
+     COUNT(end_station_id) AS end_counts
+    FROM
+     `bigquery-public-data.new_york_citibike.citibike_trips`
+    GROUP BY
+     end_station_name)
+   SELECT
+   *
+   FROM
+    START
+   JOIN
+   ENDS
+   ON
+    START.start_station_name = ENDS.end_station_name]
 	```
 # The next section is the Google Colab section.  
 1. Open up this [this Colab notebook](https://colab.research.google.com/drive/1kHdTtuHTPEaMH32GotVum41YVdeyzQ74?usp=sharing).
@@ -206,5 +301,5 @@ For this section of the exercise we will be using the `bigquery-public-data.aust
 4. Click the 'Share' button on the top right.  
 5. Change the permissions so anyone with link can view. 
 6. Copy the link and paste it right below this line. 
-	* YOUR LINK:  https://colab.research.google.com/drive/1HmrqSauLFjpXtiXMEnB08BGYnexrjbBN#scrollTo=6LU8kSdiCWQL
+	* YOUR LINK: https://colab.research.google.com/drive/1HmrqSauLFjpXtiXMEnB08BGYnexrjbBN#scrollTo=6LU8kSdiCWQL
 9. Complete the two questions in the colab notebook file. 
